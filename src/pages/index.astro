@@ -1,14 +1,45 @@
 ---
+import Layout from '../layouts/Layout.astro';
+import Menu from '../components/Menu.astro';
 ---
-<html lang="ja">
-  <head>
-    <meta charset="utf-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width" />
-    <meta name="generator" content={Astro.generator} />
-    <title>Astro</title>
-  </head>
-  <body>
-    <h1>Astro</h1>
-  </body>
-</html>
+
+<Layout title="Animation Portfolio">
+	<Menu currentSlug="" />
+	
+	<main class="flex-1 relative overflow-hidden bg-gray-100 flex items-center justify-center p-4 md:p-8">
+		<div class="w-full h-full bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden relative flex flex-col items-center justify-center text-center p-8" transition:name="gimmick-container">
+			<div class="max-w-md space-y-6">
+				<div class="w-20 h-20 bg-gray-50 rounded-2xl mx-auto flex items-center justify-center mb-6 shadow-sm border border-gray-100">
+					<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-10 h-10 text-gray-300">
+						<path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z" />
+					</svg>
+				</div>
+				
+				<h2 class="text-3xl font-bold text-primary tracking-tight">WEB Animation & Gimmicks</h2>
+				<p class="text-secondary leading-relaxed">
+					様々なインタラクティブアニメーションやUIギミックを収集したポートフォリオサイトです。<br class="hidden md:inline" />
+					左側のメニュー（モバイルの場合は上部）からアイテムを選択してプレビューを確認できます。
+				</p>
+				
+				<div class="pt-8 grid grid-cols-2 gap-4 max-w-xs mx-auto text-left text-sm text-gray-400">
+					<div class="flex items-center gap-2">
+						<span class="w-2 h-2 rounded-full bg-accent"></span>
+						<span>Astro 5.0</span>
+					</div>
+					<div class="flex items-center gap-2">
+						<span class="w-2 h-2 rounded-full bg-accent"></span>
+						<span>Tailwind CSS</span>
+					</div>
+					<div class="flex items-center gap-2">
+						<span class="w-2 h-2 rounded-full bg-accent"></span>
+						<span>View Transitions</span>
+					</div>
+					<div class="flex items-center gap-2">
+						<span class="w-2 h-2 rounded-full bg-accent"></span>
+						<span>Responsive</span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</main>
+</Layout>

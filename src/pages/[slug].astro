@@ -1,0 +1,57 @@
+---
+import { getCollection } from 'astro:content';
+import Layout from '../layouts/Layout.astro';
+import Menu from '../components/Menu.astro';
+import CircleSwipe from '../components/gimmicks/CircleSwipe.astro';
+import WaterRipple from '../components/gimmicks/WaterRipple.astro';
+
+export async function getStaticPaths() {
+  const gimmicks = await getCollection('gimmicks');
+  return gimmicks.map(entry => ({
+    params: { slug: entry.slug },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await entry.render();
+
+// コンポーネントマッピング
+// 新しいギミックを追加する際はここに登録します
+const components = {
+    'CircleSwipe': CircleSwipe,
+    'WaterRipple': WaterRipple,
+};
+
+// data.componentName は string | undefined なので、string型として扱うために型アサーションやチェックが必要ですが、
+// JS的にはそのままアクセスしてOK。TypeScriptならインデックスシグネチャが必要かも。
+const GimmickComponent = entry.data.componentName ? components[entry.data.componentName as keyof typeof components] : null;
+---
+
+<Layout title={`${entry.data.title} - Animation Portfolio`}>
+    <Menu currentSlug={entry.slug} />
+    
+    <main class="flex-1 relative overflow-hidden bg-gray-100 flex items-center justify-center p-4 md:p-8">
+        <div 
+            class="w-full h-full bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden relative"
+            transition:name="gimmick-container"
+            transition:animate="fade"
+        >
+             {GimmickComponent ? (
+                <GimmickComponent />
+             ) : (
+                <div class="flex items-center justify-center h-full text-gray-400">
+                    Component not found
+                </div>
+             )}
+             
+             {/* Info Overlay */}
+             <div class="absolute bottom-6 left-6 max-w-md bg-white/90 backdrop-blur-sm p-4 rounded-xl border border-gray-200 shadow-sm pointer-events-none z-10 hidden md:block">
+                <h2 class="font-bold text-primary text-lg mb-1">{entry.data.title}</h2>
+                <div class="text-sm text-secondary leading-relaxed prose prose-sm">
+                    <Content />
+                </div>
+             </div>
+        </div>
+    </main>
+</Layout>

@@ -1,0 +1,53 @@
+---
+import { getCollection } from 'astro:content';
+
+const gimmicks = (await getCollection('gimmicks')).sort(
+	(a, b) => a.data.order - b.data.order
+);
+
+const { currentSlug } = Astro.props;
+---
+
+<nav class="w-full md:w-80 bg-white border-r border-gray-100 flex flex-col h-auto md:h-full z-10 shrink-0">
+    <div class="p-6 border-b border-gray-100">
+        <h1 class="text-xl font-bold tracking-tight text-primary">
+            <a href="/">Animation<br/>Portfolio</a>
+        </h1>
+        <p class="text-xs text-secondary mt-2">Web Gimmick & Motion</p>
+    </div>
+
+    <div class="flex-1 overflow-y-auto py-4">
+        <ul class="space-y-1 px-3">
+            {gimmicks.map((gimmick) => (
+                <li>
+                    <a 
+                        href={`/${gimmick.slug}`}
+                        class:list={[
+                            "group flex flex-col p-3 rounded-lg transition-all duration-200 hover:bg-gray-50",
+                            currentSlug === gimmick.slug ? "bg-gray-50 ring-1 ring-gray-200" : ""
+                        ]}
+                    >
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="font-medium text-sm text-primary group-hover:text-accent transition-colors">
+                                {gimmick.data.title}
+                            </span>
+                            <div class="flex gap-1">
+                                {gimmick.data.tags.includes('PC') && (
+                                    <span class="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded border border-gray-200">PC</span>
+                                )}
+                                {gimmick.data.tags.includes('Phone') && (
+                                    <span class="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded border border-gray-200">Phone</span>
+                                )}
+                            </div>
+                        </div>
+                        <span class="text-xs text-gray-400 line-clamp-1">{gimmick.data.description}</span>
+                    </a>
+                </li>
+            ))}
+        </ul>
+    </div>
+    
+    <div class="p-4 border-t border-gray-100 text-xs text-center text-gray-300">
+        &copy; 2026 Hayukataishi
+    </div>
+</nav>

@@ -1,0 +1,89 @@
+---
+---
+<div id="water-ripple-container" class="w-full h-full relative overflow-hidden bg-gradient-to-br from-blue-400 to-cyan-300 cursor-pointer select-none">
+    <div class="absolute inset-0 flex items-center justify-center pointer-events-none z-10 mix-blend-overlay">
+         <h2 class="text-white text-4xl font-light tracking-widest opacity-80">TAP WATER</h2>
+    </div>
+</div>
+
+<style is:global>
+    @keyframes ripple-anim {
+        0% {
+            transform: translate(-50%, -50%) scale(0);
+            opacity: 0.8;
+            border-width: 4px;
+        }
+        100% {
+            transform: translate(-50%, -50%) scale(4);
+            opacity: 0;
+            border-width: 0px;
+        }
+    }
+    .ripple {
+        position: absolute;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0) 60%);
+        border: 2px solid rgba(255,255,255,0.6);
+        box-shadow: 0 0 15px rgba(255,255,255,0.3);
+        pointer-events: none;
+        animation: ripple-anim 1.5s ease-out forwards;
+        z-index: 5;
+    }
+</style>
+
+<script>
+    class WaterRipple {
+        container: HTMLElement;
+
+        constructor() {
+            this.container = document.getElementById('water-ripple-container')!;
+            this.init();
+        }
+
+        init() {
+            const createRipple = (x: number, y: number) => {
+                const ripple = document.createElement('div');
+                ripple.classList.add('ripple');
+                
+                // コンテナ内での相対座標を計算
+                const rect = this.container.getBoundingClientRect();
+                const relativeX = x - rect.left;
+                const relativeY = y - rect.top;
+
+                ripple.style.left = `${relativeX}px`;
+                ripple.style.top = `${relativeY}px`;
+                
+                // サイズ設定
+                const size = 100; 
+                ripple.style.width = `${size}px`;
+                ripple.style.height = `${size}px`;
+
+                this.container.appendChild(ripple);
+
+                // アニメーション終了後に削除
+                ripple.addEventListener('animationend', () => {
+                    ripple.remove();
+                });
+            };
+
+            this.container.addEventListener('click', (e) => {
+                createRipple(e.clientX, e.clientY);
+            });
+            
+            // タッチ対応（マルチタッチ可）
+            this.container.addEventListener('touchstart', (e) => {
+                // e.preventDefault(); // スクロールしたい場合もあるので、状況によるが今回は全画面ギミックなので止める
+                e.preventDefault();
+                for (let i = 0; i < e.touches.length; i++) {
+                    createRipple(e.touches[i].clientX, e.touches[i].clientY);
+                }
+            }, { passive: false });
+        }
+    }
+
+    document.addEventListener('astro:page-load', () => {
+        if(document.getElementById('water-ripple-container')) {
+            new WaterRipple();
+        }
+    });
+</script>

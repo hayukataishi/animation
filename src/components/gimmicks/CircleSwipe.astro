@@ -1,0 +1,179 @@
+---
+---
+
+<div id="circle-swipe-container" class="w-full h-full flex flex-col items-center justify-center bg-zinc-900 text-white relative overflow-hidden transition-colors duration-700 select-none touch-none">
+    
+    <!-- 背景演出用の円 -->
+    <div class="absolute inset-0 flex items-center justify-center opacity-10 pointer-events-none">
+        <div class="w-[500px] h-[500px] rounded-full border border-white"></div>
+        <div class="w-[300px] h-[300px] rounded-full border border-white absolute"></div>
+    </div>
+
+    <!-- UI -->
+    <div class="z-10 text-center pointer-events-none transition-opacity duration-300" id="instruction">
+        <h2 class="text-3xl font-bold mb-2 tracking-wider" id="mode-text">DARK MODE</h2>
+        <p class="text-zinc-400 text-sm tracking-widest uppercase">Draw a circle to switch</p>
+    </div>
+
+    <!-- インタラクションエリアとフィードバック -->
+    <svg class="absolute inset-0 w-full h-full pointer-events-none" style="filter: drop-shadow(0 0 10px rgba(255,255,255,0.5));">
+        <!-- 軌跡を描画するパス -->
+        <path id="trace-path" d="" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-opacity="0.8" />
+    </svg>
+
+    <!-- 進行度インジケーター -->
+    <div class="absolute bottom-10 w-64 h-1 bg-zinc-800 rounded-full overflow-hidden">
+        <div id="progress-bar" class="h-full bg-white w-0 transition-all duration-100 ease-out"></div>
+    </div>
+</div>
+
+<script>
+    class CircleSwipe {
+        container: HTMLElement;
+        path: SVGPathElement;
+        progressBar: HTMLElement;
+        modeText: HTMLElement;
+        instruction: HTMLElement;
+        
+        isDragging = false;
+        points: {x: number, y: number}[] = [];
+        center = { x: 0, y: 0 };
+        totalRotation = 0;
+        lastAngle = 0;
+        isLightMode = false;
+        
+        constructor() {
+            this.container = document.getElementById('circle-swipe-container')!;
+            this.path = document.getElementById('trace-path') as unknown as SVGPathElement;
+            this.progressBar = document.getElementById('progress-bar')!;
+            this.modeText = document.getElementById('mode-text')!;
+            this.instruction = document.getElementById('instruction')!;
+
+            this.init();
+            this.updateCenter();
+            
+            window.addEventListener('resize', () => this.updateCenter());
+        }
+
+        init() {
+            // PC Events
+            this.container.addEventListener('mousedown', (e) => this.start(e.clientX, e.clientY));
+            window.addEventListener('mousemove', (e) => this.move(e.clientX, e.clientY));
+            window.addEventListener('mouseup', () => this.end());
+
+            // Touch Events
+            this.container.addEventListener('touchstart', (e) => {
+                e.preventDefault(); 
+                this.start(e.touches[0].clientX, e.touches[0].clientY);
+            }, { passive: false });
+            window.addEventListener('touchmove', (e) => {
+                if(this.isDragging) e.preventDefault(); 
+                this.move(e.touches[0].clientX, e.touches[0].clientY);
+            }, { passive: false });
+            window.addEventListener('touchend', () => this.end());
+        }
+
+        updateCenter() {
+            const rect = this.container.getBoundingClientRect();
+            this.center = {
+                x: rect.left + rect.width / 2,
+                y: rect.top + rect.height / 2
+            };
+        }
+
+        getAngle(x: number, y: number) {
+            return Math.atan2(y - this.center.y, x - this.center.x);
+        }
+
+        start(x: number, y: number) {
+            this.isDragging = true;
+            this.points = [{x, y}];
+            this.totalRotation = 0;
+            this.lastAngle = this.getAngle(x, y);
+            this.path.setAttribute('d', `M ${x} ${y}`);
+            this.instruction.style.opacity = '0.5';
+        }
+
+        move(x: number, y: number) {
+            if (!this.isDragging) return;
+
+            // 軌跡の描画
+            this.points.push({x, y});
+            if (this.points.length > 50) this.points.shift(); // 軌跡の長さを制限
+            
+            // スムーズな曲線を生成（簡易的）
+            const d = this.points.reduce((acc, point, i) => {
+                return i === 0 ? `M ${point.x} ${point.y}` : `${acc} L ${point.x} ${point.y}`;
+            }, '');
+            this.path.setAttribute('d', d);
+
+            // 回転量の計算
+            const currentAngle = this.getAngle(x, y);
+            let delta = currentAngle - this.lastAngle;
+
+            // -PI から PI の境界を跨ぐ処理
+            if (delta > Math.PI) delta -= Math.PI * 2;
+            if (delta < -Math.PI) delta += Math.PI * 2;
+
+            this.totalRotation += delta;
+            this.lastAngle = currentAngle;
+
+            // 進捗の更新 (1回転 = 2PI)
+            const progress = Math.min(Math.abs(this.totalRotation) / (Math.PI * 2), 1);
+            this.progressBar.style.width = `${progress * 100}%`;
+
+            // トリガー判定
+            if (Math.abs(this.totalRotation) > Math.PI * 2) {
+                this.triggerSwitch();
+                this.end(); // リセット
+            }
+        }
+
+        end() {
+            this.isDragging = false;
+            this.points = [];
+            this.path.setAttribute('d', '');
+            this.totalRotation = 0;
+            this.progressBar.style.width = '0%';
+            this.instruction.style.opacity = '1';
+        }
+
+        triggerSwitch() {
+            this.isLightMode = !this.isLightMode;
+            
+            if (this.isLightMode) {
+                this.container.classList.remove('bg-zinc-900', 'text-white');
+                this.container.classList.add('bg-gray-100', 'text-zinc-900');
+                this.modeText.textContent = "LIGHT MODE";
+                this.path.setAttribute('stroke', '#333');
+                (this.progressBar.parentElement as HTMLElement).classList.replace('bg-zinc-800', 'bg-gray-300');
+                this.progressBar.classList.replace('bg-white', 'bg-zinc-900');
+            } else {
+                this.container.classList.remove('bg-gray-100', 'text-zinc-900');
+                this.container.classList.add('bg-zinc-900', 'text-white');
+                this.modeText.textContent = "DARK MODE";
+                this.path.setAttribute('stroke', 'white');
+                (this.progressBar.parentElement as HTMLElement).classList.replace('bg-gray-300', 'bg-zinc-800');
+                this.progressBar.classList.replace('bg-zinc-900', 'bg-white');
+            }
+
+            // フラッシュエフェクト
+            const flash = document.createElement('div');
+            flash.className = 'absolute inset-0 bg-white transition-opacity duration-500 pointer-events-none';
+            flash.style.opacity = '0.5';
+            this.container.appendChild(flash);
+            requestAnimationFrame(() => {
+                flash.style.opacity = '0';
+                setTimeout(() => flash.remove(), 500);
+            });
+        }
+    }
+
+    // Astro View Transitions対応: ページ遷移時に再初期化
+    // Astro 5 / ViewTransitions では 'astro:page-load' イベントを使う
+    document.addEventListener('astro:page-load', () => {
+        if(document.getElementById('circle-swipe-container')) {
+            new CircleSwipe();
+        }
+    });
+</script>
