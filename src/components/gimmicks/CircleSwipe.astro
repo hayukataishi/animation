@@ -76,8 +76,16 @@
         updateCenter() {
             const rect = this.container.getBoundingClientRect();
             this.center = {
-                x: rect.left + rect.width / 2,
-                y: rect.top + rect.height / 2
+                x: rect.width / 2,
+                y: rect.height / 2
+            };
+        }
+
+        getRelativePos(clientX: number, clientY: number) {
+            const rect = this.container.getBoundingClientRect();
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
             };
         }
 
@@ -85,7 +93,8 @@
             return Math.atan2(y - this.center.y, x - this.center.x);
         }
 
-        start(x: number, y: number) {
+        start(clientX: number, clientY: number) {
+            const { x, y } = this.getRelativePos(clientX, clientY);
             this.isDragging = true;
             this.points = [{x, y}];
             this.totalRotation = 0;
@@ -94,8 +103,10 @@
             this.instruction.style.opacity = '0.5';
         }
 
-        move(x: number, y: number) {
+        move(clientX: number, clientY: number) {
             if (!this.isDragging) return;
+
+            const { x, y } = this.getRelativePos(clientX, clientY);
 
             // 軌跡の描画
             this.points.push({x, y});
